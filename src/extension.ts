@@ -1,6 +1,12 @@
 import simpleGit from 'simple-git';
 import * as vscode from 'vscode';
-import { getCurrentBranch, getBaseBranch, getChangedFiles, processFile } from './git/utils';
+import {
+  getBaseBranch,
+  getChangedFiles,
+  getCurrentBranch,
+  getGitMessage,
+  processFile,
+} from './git/utils';
 
 async function activate(context: vscode.ExtensionContext) {
   const disposable = vscode.commands.registerCommand('cleaner.clean', async () => {
@@ -41,17 +47,8 @@ async function activate(context: vscode.ExtensionContext) {
       await git.add(files);
       const commitResult = await git.commit('Code cleanup');
 
-      if (
-        commitResult.summary.changes === 0 &&
-        commitResult.summary.insertions === 0 &&
-        commitResult.summary.deletions === 0
-      ) {
-        vscode.window.showInformationMessage('No changes were made during code cleanup.');
-      } else {
-        vscode.window.showInformationMessage(
-          `Code cleaned. Changes committed: ${commitResult.summary.changes} file(s) changed, ${commitResult.summary.insertions} insertion(s), ${commitResult.summary.deletions} deletion(s).`,
-        );
-      }
+      // notify user about the changes
+      vscode.window.showInformationMessage(getGitMessage(commitResult));
     } catch (err: any) {
       vscode.window.showErrorMessage(`Error: ${err.message}`);
     }

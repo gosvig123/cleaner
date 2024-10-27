@@ -92,4 +92,11 @@ function parseDiff(diff: string): { [lineNumber: number]: string } {
   return changedLines;
 }
 
-export { getBaseBranch, getChangedFiles, getCurrentBranch, processFile };
+function getGitMessage(commitResult: any): string {
+  const { changes, insertions, deletions } = commitResult.summary;
+  if (changes === 0 && insertions === 0 && deletions === 0) {
+    return 'No changes were made during code cleanup.';
+  }
+  return `Code cleaned. Changes committed: ${changes} file(s) changed, ${insertions} insertion(s), ${deletions} deletion(s).`;
+}
+export { getBaseBranch, getChangedFiles, getCurrentBranch, processFile, getGitMessage };
