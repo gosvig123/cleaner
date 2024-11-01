@@ -49,15 +49,9 @@ async function processFile(git: any, workspacePath: string, baseBranch: string, 
         .then((buffer) => buffer.toString());
     }
 
-    // Get the diff between base branch and HEAD
-    const diff = await git.diff([`${baseBranch}`, 'HEAD', '--', file]);
-
-    // Parse the diff to get changed lines
-    const changedLines = parseDiff(diff);
-
-    // Apply cleaning functions only to changed lines
+    // Create cleaner instance and clean the content
     const cleaner = new Cleaner(baseContent, currentContent);
-    const { content: cleanedContent, similarity } = await cleaner.cleanChangedLines(changedLines);
+    const { content: cleanedContent, similarity } = await cleaner.clean();
 
     if (cleanedContent !== currentContent) {
       // Apply the cleaned content by writing directly to the file
@@ -70,27 +64,6 @@ async function processFile(git: any, workspacePath: string, baseBranch: string, 
   }
 }
 
-function parseDiff(diff: string): { [lineNumber: number]: string } {
-  const changedLines: { [lineNumber: number]: string } = {};
-  const lines = diff.split('\n');
-  let currentLine = 0;
-
-  for (const line of lines) {
-    if (line.startsWith('@@')) {
-      const match = line.match(/@@ -\d+,?\d* \+(\d+),?\d* @@/);
-      if (match) {
-        currentLine = parseInt(match[1]) - 1;
-      }
-    } else if (line.startsWith('+') && !line.startsWith('+++')) {
-      changedLines[currentLine] = line.slice(1);
-      currentLine++;
-    } else if (!line.startsWith('-')) {
-      currentLine++;
-    }
-  }
-
-  return changedLines;
-}
 
 function getGitMessage(commitResult: any): string {
   const { changes, insertions, deletions } = commitResult.summary;
